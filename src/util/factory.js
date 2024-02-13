@@ -22,10 +22,9 @@ const GoogleAuth = require('./googleAuth')
 const config = require('../config')
 const featureToggles = config().featureToggles
 const { getDocumentOrSheetId, getSheetName } = require('./urlUtils')
-const { getGraphSize, graphConfig, isValidConfig } = require('../graphing/config')
+const { getGraphSize, isValidConfig } = require('../graphing/config')
 const InvalidConfigError = require('../exceptions/invalidConfigError')
 const InvalidContentError = require('../exceptions/invalidContentError')
-const FileNotFoundError = require('../exceptions/fileNotFoundError')
 const plotRadar = function (title, blips, currentRadarName, alternativeRadars) {
   if (title.endsWith('.csv')) {
     title = title.substring(0, title.length - 4)
@@ -80,45 +79,40 @@ const plotRadar = function (title, blips, currentRadarName, alternativeRadars) {
   new GraphingRadar(size, radar).init().plot()
 }
 
-function validateInputQuadrantOrRingName(allQuadrantsOrRings, quadrantOrRing) {
-  const quadrantOrRingNames = Object.keys(allQuadrantsOrRings)
-  const regexToFixLanguagesAndFrameworks = /(-|\s+)(and)(-|\s+)|\s*(&)\s*/g
-  const formattedInputQuadrant = quadrantOrRing.toLowerCase().replace(regexToFixLanguagesAndFrameworks, ' & ')
-  return quadrantOrRingNames.find((quadrantOrRing) => quadrantOrRing.toLowerCase() === formattedInputQuadrant)
-}
-
 const plotRadarGraph = function (title, blips, currentRadarName, alternativeRadars) {
   document.title = title.replace(/.(csv|json)$/, '')
 
   d3.selectAll('.loading').remove()
 
-  const ringMap = graphConfig.rings.reduce((allRings, ring, index) => {
-    allRings[ring] = new Ring(ring, index)
-    return allRings
-  }, {})
+  const rings = blips.reduce((allRings, blip) => {
+    const capitalizedRingName = blip.ring[0].toUpperCase() + blip.ring.slice(1).toLowerCase()
+    if(capitalizedRingName in allRings) return allRings
+    allRings[capitalizedRingName] = new Ring(capitalizedRingName, Object.keys(allRings).length)
+    return allRings;
+  },{})
 
-  const quadrants = graphConfig.quadrants.reduce((allQuadrants, quadrant) => {
-    allQuadrants[quadrant] = new Quadrant(quadrant)
+  const quadrants = blips.reduce((allQuadrants, blip) => {
+    if(blip.quadrant in allQuadrants) return allQuadrants
+    allQuadrants[blip.quadrant] = new Quadrant(blip.quadrant)
     return allQuadrants
   }, {})
 
+
   blips.forEach((blip) => {
-    const currentQuadrant = validateInputQuadrantOrRingName(quadrants, blip.quadrant)
-    const ring = validateInputQuadrantOrRingName(ringMap, blip.ring)
-    if (currentQuadrant && ring) {
+    if (blip.quadrant && blip.ring) {
       const blipObj = new Blip(
         blip.name,
-        ringMap[ring],
+        rings[blip.ring[0].toUpperCase() + blip.ring.slice(1).toLowerCase()],
         blip.isNew.toLowerCase() === 'true',
         blip.topic,
         blip.description,
       )
-      quadrants[currentQuadrant].add(blipObj)
+      quadrants[blip.quadrant].add(blipObj)
     }
   })
 
   const radar = new Radar()
-  radar.addRings(Object.values(ringMap))
+  radar.addRings(Object.values(rings))
 
   _.each(quadrants, function (quadrant) {
     radar.addQuadrant(quadrant)
@@ -202,54 +196,12 @@ const GoogleSheet = function (sheetReference, sheetName) {
 
   return self
 }
-
-const CSVDocument = function (url) {
+const loadRadarSheet = function () {
   var self = {}
 
-  self.build = function () {
-    d3.csv(url)
-      .then(createBlips)
-      .catch((exception) => {
-        const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the CSV file you've entered`)
-        plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'csv')
-      })
-  }
-
-  var createBlips = function (data) {
-    try {
-      var columnNames = data.columns
-      delete data.columns
-      var contentValidator = new ContentValidator(columnNames)
-      contentValidator.verifyContent()
-      contentValidator.verifyHeaders()
-      var blips = _.map(data, new InputSanitizer().sanitize)
-      featureToggles.UIRefresh2022
-        ? plotRadarGraph(FileName(url), blips, 'CSV File', [])
-        : plotRadar(FileName(url), blips, 'CSV File', [])
-    } catch (exception) {
-      const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_CSV_CONTENT)
-      plotErrorMessage(featureToggles.UIRefresh2022 ? invalidContentError : exception, 'csv')
-    }
-  }
-
-  self.init = function () {
-    plotLoading()
-    return self
-  }
-
-  return self
-}
-
-const JSONFile = function (url) {
-  var self = {}
-
-  self.build = function () {
-    d3.json(url)
-      .then(createBlips)
-      .catch((exception) => {
-        const fileNotFoundError = new FileNotFoundError(`Oops! We can't find the JSON file you've entered`)
-        plotErrorMessage(featureToggles.UIRefresh2022 ? fileNotFoundError : exception, 'json')
-      })
+  self.build = async function () {
+    const radarData = require('../../instea-tech-radar.json')
+    createBlips(radarData)
   }
 
   var createBlips = function (data) {
@@ -260,9 +212,10 @@ const JSONFile = function (url) {
       contentValidator.verifyHeaders()
       var blips = _.map(data, new InputSanitizer().sanitize)
       featureToggles.UIRefresh2022
-        ? plotRadarGraph(FileName(url), blips, 'JSON File', [])
-        : plotRadar(FileName(url), blips, 'JSON File', [])
+        ? plotRadarGraph('instea-tech-radar.json', blips, 'JSON File', [])
+        : plotRadar('instea-tech-radar.json', blips, 'JSON File', [])
     } catch (exception) {
+      console.error(exception)
       const invalidContentError = new InvalidContentError(ExceptionMessages.INVALID_JSON_CONTENT)
       plotErrorMessage(featureToggles.UIRefresh2022 ? invalidContentError : exception, 'json')
     }
@@ -276,24 +229,8 @@ const JSONFile = function (url) {
   return self
 }
 
-const DomainName = function (url) {
-  var search = /.+:\/\/([^\\/]+)/
-  var match = search.exec(decodeURIComponent(url.replace(/\+/g, ' ')))
-  return match == null ? null : match[1]
-}
-
-const FileName = function (url) {
-  var search = /([^\\/]+)$/
-  var match = search.exec(decodeURIComponent(url.replace(/\+/g, ' ')))
-  if (match != null) {
-    return match[1]
-  }
-  return url
-}
-
 const Factory = function () {
   var self = {}
-  var sheet
 
   self.build = function () {
     if (!isValidConfig()) {
@@ -316,38 +253,7 @@ const Factory = function () {
       }
     })
 
-    const domainName = DomainName(window.location.search.substring(1))
-
-    const paramId = getDocumentOrSheetId()
-    if (paramId && paramId.endsWith('.csv')) {
-      sheet = CSVDocument(paramId)
-      sheet.init().build()
-    } else if (paramId && paramId.endsWith('.json')) {
-      sheet = JSONFile(paramId)
-      sheet.init().build()
-    } else if (domainName && domainName.endsWith('google.com') && paramId) {
-      const sheetName = getSheetName()
-      sheet = GoogleSheet(paramId, sheetName)
-      sheet.init().build()
-    } else {
-      if (!featureToggles.UIRefresh2022) {
-        document.body.style.opacity = '1'
-        document.body.innerHTML = ''
-        const content = d3.select('body').append('div').attr('class', 'input-sheet')
-        plotLogo(content)
-        const bannerText =
-          '<div><h1>Build your own radar</h1><p>Once you\'ve <a href ="https://www.thoughtworks.com/radar/byor">created your Radar</a>, you can use this service' +
-          ' to generate an <br />interactive version of your Technology Radar. Not sure how? <a href ="https://www.thoughtworks.com/radar/byor">Read this first.</a></p></div>'
-
-        plotBanner(content, bannerText)
-
-        plotForm(content)
-
-        plotFooter(content)
-      }
-
-      setDocumentTitle()
-    }
+    loadRadarSheet().init().build()
   }
 
   return self
