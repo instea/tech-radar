@@ -398,23 +398,23 @@ function renderRadarQuadrants(size, svg, quadrant, rings, ringCalculator, tip) {
 function renderRadarLegends(radarElement) {
   const legendsContainer = radarElement.append('div').classed('radar-legends', true)
 
-  const newImage = legendsContainer
-    .append('img')
-    .attr('src', '/images/new.svg')
-    .attr('width', '37px')
-    .attr('height', '37px')
-    .attr('alt', 'new blip legend icon')
-    .node().outerHTML
-
-  const existingImage = legendsContainer
-    .append('img')
-    .attr('src', '/images/existing.svg')
-    .attr('width', '37px')
-    .attr('height', '37px')
-    .attr('alt', 'existing blip legend icon')
-    .node().outerHTML
-
-  legendsContainer.html(`${newImage} New ${existingImage} Existing`)
+  // const newImage = legendsContainer
+  //   .append('img')
+  //   .attr('src', '/images/new.svg')
+  //   .attr('width', '37px')
+  //   .attr('height', '37px')
+  //   .attr('alt', 'new blip legend icon')
+  //   .node().outerHTML
+  //
+  // const existingImage = legendsContainer
+  //   .append('img')
+  //   .attr('src', '/images/existing.svg')
+  //   .attr('width', '37px')
+  //   .attr('height', '37px')
+  //   .attr('alt', 'existing blip legend icon')
+  //   .node().outerHTML
+  //
+  // legendsContainer.html(`${newImage} New ${existingImage} Existing`)
 }
 
 function renderMobileView(quadrant) {
