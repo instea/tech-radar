@@ -14,6 +14,8 @@ spec/end_to_end_tests/reports/
 src/stylesheets/_featuretoggles.scss
 cypress/
 
+instea-dev-b79e01fcea4d.json
+
 .nyc_output
 
 .private.notes
