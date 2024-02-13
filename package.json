@@ -6,7 +6,9 @@
   "scripts": {
     "build:dev": "webpack --mode development --config webpack.dev.js",
     "build:prod": "webpack --mode production --config webpack.prod.js",
+    "build": "webpack --mode production --config webpack.prod.js",
     "dev": "webpack-dev-server --mode development --config webpack.dev.js",
+    "download-radar": "node src/util/loadTechRadar.js",
     "test": "jest",
     "test:coverage": "jest --coverage",
     "test:e2e": "cypress open --env host=$TEST_URL",
@@ -56,13 +58,16 @@
     "yargs": "^17.7.2"
   },
   "dependencies": {
+    "axios": "^1.6.7",
     "chance": "^1.1.11",
     "d3": "^7.8.5",
     "d3-tip": "^0.9.1",
+    "googleapis": "^132.0.0",
     "jquery": "^3.7.1",
     "jquery-ui": "^1.13.2",
     "lodash": "^4.17.21",
-    "sanitize-html": "^2.11.0"
+    "sanitize-html": "^2.11.0",
+    "url": "^0.11.3"
   },
   "standard": {
     "globals": [
