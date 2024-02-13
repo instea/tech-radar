@@ -23,6 +23,15 @@
   font-family: 'Inter', sans-serif;
 }
 
+.instea-banner {
+  padding-left: 0.5em;
+  display: flex;
+  align-items: center;
+  h1 {
+    margin-left: 0.5em;
+  }
+}
+
 @supports (font-variation-settings: normal) {
   :root {
     font-family: 'Inter var', sans-serif;
