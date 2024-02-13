@@ -16,12 +16,11 @@ if (env) {
 
 const common = ['./src/common.js']
 
-const ASSET_PATH = process.env.ASSET_PATH || '/'
-
 const plugins = [
   new MiniCssExtractPlugin({ filename: '[name].[contenthash].css' }),
   new HtmlWebpackPlugin({
     template: './src/index.html',
+    favicon: './src/images/favicon.ico',
     chunks: ['main'],
     inject: 'body',
   }),
@@ -43,15 +42,12 @@ module.exports = {
   },
   output: {
     path: buildPath,
-    publicPath: ASSET_PATH,
     filename: '[name].[contenthash].js',
     assetModuleFilename: 'images/[name][ext]',
+    clean: true,
   },
   resolve: {
-    extensions: ['.js', '.ts'],
-    fallback: {
-      fs: false,
-    },
+    extensions: ['.js', '.ts']
   },
 
   module: {
