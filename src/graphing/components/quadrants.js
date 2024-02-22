@@ -298,22 +298,22 @@ function renderRadarQuadrantName(quadrant, parentGroup, tip) {
     .attr('fill', '#e16a7c')
   quadrantName.text(quadrantNameToDisplay).attr('font-weight', 'bold')
 
-  wrapQuadrantNameInMultiLine(quadrantName, adjustY < 0, quadrantNameGroup, tip)
+
   const quadrantTextElement = document.querySelector(`.quadrant-group-${quadrant.order} .quadrant-name-group text`)
   const renderedText = quadrantTextElement.getBoundingClientRect()
   ctaArrowXOffset = renderedText.width + 10
   anchor = 'start'
 
   if (adjustX < 0) {
-    translateX = 60
+    translateX = 20
   } else {
-    translateX = quadrantWidth * 2 - quadrantsGap - renderedText.width
+    translateX = quadrantWidth * 2 - quadrantsGap - renderedText.width + 20
   }
   if (adjustY < 0) {
     ctaArrowYOffset = quadrantTextElement.childElementCount > 1 ? 8 : ctaArrowYOffset
-    translateY = 60
+    translateY = 30
   } else {
-    translateY = effectiveQuadrantWidth * 2 - 60
+    translateY = effectiveQuadrantWidth * 2 - 30
   }
   quadrantName.attr('text-anchor', anchor)
   quadrantNameGroup.attr('transform', 'translate(' + translateX + ', ' + translateY + ')')
