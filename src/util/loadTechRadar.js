@@ -3,7 +3,7 @@ const fs = require('fs')
 
 const credentials = require('../../instea-dev-b79e01fcea4d.json')
 
-const sheetId = '1GxM8BRk3tXSpMWNl1Rj4VL4RvEPnFzh0sqjsCcSgk5g'
+const sheetId = '193QZSj_Xajb0erG4031jOqBkGphUX3NJZ3aCl_1npWs'
 
 function normalizeText(text) {
   return text
